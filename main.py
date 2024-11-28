@@ -46,9 +46,9 @@ def search_youtube(query: str) -> dict:
     return None
 
 # Function to download audio from YouTube link
-def download_audio(url: str, update: Update, video_title: str = None) -> None:
+async def download_audio(url: str, update: Update, video_title: str = None) -> None:
     try:
-        update.message.reply_text("Downloading the audio, please wait...")
+        await update.message.reply_text("Downloading the audio, please wait...")
         if not video_title:
             video_title = "audio"
 
@@ -66,12 +66,12 @@ def download_audio(url: str, update: Update, video_title: str = None) -> None:
         if process.returncode == 0 and audio_data:
             audio_file = BytesIO(audio_data)
             audio_file.name = f"{video_title}.mp3"
-            update.message.reply_audio(audio_file)
+            await update.message.reply_audio(audio_file)
         else:
-            update.message.reply_text("Failed to download the audio.")
+            await update.message.reply_text("Failed to download the audio.")
     except Exception as e:
         print(f"Error while downloading audio: {e}")
-        update.message.reply_text("An error occurred while processing your request.")
+        await update.message.reply_text("An error occurred while processing your request.")
 
 # Function to handle /start command
 async def start(update: Update, context) -> None:
@@ -81,22 +81,22 @@ async def start(update: Update, context) -> None:
 async def handle_message(update: Update, context) -> None:
     url_or_keyword = update.message.text
 
-    def process_request():
+    async def process_request():
         if 'youtube.com' in url_or_keyword or 'youtu.be' in url_or_keyword:
             result = get_video_details(url_or_keyword)
             if result:
-                download_audio(result["url"], update, result["title"])
+                await download_audio(result["url"], update, result["title"])
             else:
-                update.message.reply_text("Invalid YouTube link.")
+                await update.message.reply_text("Invalid YouTube link.")
         else:
             result = search_youtube(url_or_keyword)
             if result:
-                download_audio(result["url"], update, result["title"])
+                await download_audio(result["url"], update, result["title"])
             else:
-                update.message.reply_text("No results found for your query.")
+                await update.message.reply_text("No results found for your query.")
 
     # Handle the request in a new thread
-    Thread(target=process_request).start()
+    Thread(target=lambda: context.application.create_task(process_request())).start()
 
 # Main function to start the bot
 def main() -> None:
