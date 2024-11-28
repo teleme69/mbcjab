@@ -2,3 +2,4 @@ python-telegram-bot
 google-api-python-client
 yt-dlp
 flask
+python-telegram-bot[webhooks]
